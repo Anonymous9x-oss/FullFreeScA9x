@@ -156,6 +156,25 @@ RS.Heartbeat:Connect(function(dt)
             cf = CFrame.lookAt(
                 Vector3.new(tPos.X + look.X*dist, fy, tPos.Z + look.Z*dist),
                 Vector3.new(tPos.X, fy, tPos.Z))
+
+        elseif S.mode == "BACK" then
+            -- Stand directly behind target, same Y.
+            -- Target's LookVector points FORWARD, so we go -LookVector.
+            -- We face toward the target so our skills point at them.
+            local look = th.CFrame.LookVector
+            local behind = tPos - look * dist   -- behind = opposite of look
+            cf = CFrame.lookAt(
+                Vector3.new(behind.X, tPos.Y, behind.Z),
+                tPos)
+
+        elseif S.mode == "BLINK" then
+            -- TP left / right of target alternating each 0.35s.
+            -- Uses workspace time so no extra state variable is needed.
+            local side = math.floor(workspace:GetServerTimeNow() / 0.35) % 2 == 0 and 1 or -1
+            local right = th.CFrame.RightVector
+            cf = CFrame.lookAt(
+                Vector3.new(tPos.X + right.X*dist*side, tPos.Y, tPos.Z + right.Z*dist*side),
+                tPos)
         end
         if cf then pcall(function() hrp.CFrame = cf end) end
         if S.dragHold then
@@ -1183,7 +1202,7 @@ mkSec(kp,"Target",o())
 
 local pickerCard = Instance.new("Frame")
 pickerCard.Name               = "TargetPicker"
-pickerCard.Size               = UDim2.new(1,0,0,90)
+pickerCard.Size               = UDim2.new(1,0,0,120)
 pickerCard.BackgroundColor3   = C.card
 pickerCard.BackgroundTransparency = 0
 pickerCard.BorderSizePixel    = 0
@@ -1207,7 +1226,7 @@ selLbl.Parent              = pickerCard
 
 -- Scrollable player list
 local pScroll = Instance.new("ScrollingFrame")
-pScroll.Size                 = UDim2.new(1,-4,0,46)
+pScroll.Size                 = UDim2.new(1,-4,0,78)
 pScroll.Position             = UDim2.fromOffset(2,22)
 pScroll.BackgroundColor3     = C.trkBg
 pScroll.BackgroundTransparency = 0
@@ -1282,7 +1301,7 @@ buildPlayerList()
 -- Refresh button
 local refreshBtn = Instance.new("ImageButton")
 refreshBtn.Size               = UDim2.new(1,-4,0,16)
-refreshBtn.Position           = UDim2.fromOffset(2,72)
+refreshBtn.Position           = UDim2.fromOffset(2,102)
 refreshBtn.BackgroundColor3   = C.card
 refreshBtn.BackgroundTransparency = 0
 refreshBtn.BorderSizePixel    = 0
@@ -1314,7 +1333,7 @@ refreshBtn.MouseLeave:Connect(function()
 end)
 
 mkSec(kp,"Follow",o())
-mkDrop(kp,{title="Mode",opts={"HEAD","ORBIT","FEET"},def="HEAD",ord=o(),cb=function(v)
+mkDrop(kp,{title="Mode",opts={"HEAD","ORBIT","FEET","BACK","BLINK"},def="HEAD",ord=o(),cb=function(v)
     S.mode=v; orbit=0
 end})
 mkSlider(kp,{title="Stud Distance",min=1,max=20,def=3,suf=" st",step=0.5,ord=o(),cb=function(v) S.dist=v end})
