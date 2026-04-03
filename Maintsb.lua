@@ -1,5 +1,5 @@
 --[[
-  Anonymous9x TSB Strong  v6.0
+  Anonymous9x TSB Strong  v1.03
   The Strongest Battlegrounds
   By Anonymous9x
   ──────────────────────────────────────────
@@ -68,11 +68,9 @@ local S = {
     speedOn=false, speedVal=1.5,
     jumpOn=false, jumpVal=50,
     ws=16, wsOn=false,
-    tapOn=false, tapDelay=0.2, tapSkill="Pukulan Biasa",
     noDash=false, noFatigue=false, extraSlots=false, emoteSearch=false,
 }
 local orbit = 0
-local tapAlive = false
 
 -- ═════════════════════════════════════════
 -- HELPERS
@@ -108,34 +106,6 @@ end
 -- ═════════════════════════════════════════
 -- AUTO TAP
 -- ═════════════════════════════════════════
-local SKILL_MAP = {
-    ["Pukulan Biasa"]     = {"Pukulan Biasa","Basic Attack","Attack"},
-    ["Pukulan Berurutan"] = {"Pukulan Berurutan","Combo","Jab"},
-    ["Dorong"]            = {"Dorong","Push"},
-    ["Uppercut"]          = {"Uppercut","Upper"},
-}
-local function tapLoop()
-    while tapAlive do
-        if S.tapOn and S.target and char and hrp then
-            local texts = SKILL_MAP[S.tapSkill] or {S.tapSkill}
-            for _, g in ipairs(LP.PlayerGui:GetChildren()) do
-                if g:IsA("ScreenGui") and g.Enabled then
-                    for _, b in ipairs(g:GetDescendants()) do
-                        if b:IsA("TextButton") and b.Visible then
-                            local t = (b.Text or ""):match("^%s*(.-)%s*$") or ""
-                            for _, pat in ipairs(texts) do
-                                if t:find(pat, 1, true) then
-                                    pcall(function() b.MouseButton1Click:Fire() end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(S.tapDelay)
-    end
-end
 
 -- ═════════════════════════════════════════
 -- COMBAT ENGINE
@@ -348,7 +318,7 @@ titleL.Parent             = header
 -- Version badge
 local verF = Instance.new("Frame")
 verF.Size             = UDim2.fromOffset(38, 14)
-verF.Position         = UDim2.new(0, 215, 0.5, -7)
+verF.Position         = UDim2.new(0, 310, 0.5, -7)
 verF.BackgroundColor3 = C.card
 verF.BorderSizePixel  = 0
 verF.ZIndex           = 12
@@ -358,43 +328,57 @@ local verS = Instance.new("UIStroke", verF); verS.Color = C.borderH; verS.Thickn
 local verL = Instance.new("TextLabel")
 verL.Size               = UDim2.fromScale(1, 1)
 verL.BackgroundTransparency = 1
-verL.Text               = "v6.0"
+verL.Text               = "v1.03"
 verL.Font               = Enum.Font.GothamBold
 verL.TextSize           = 8
 verL.TextColor3         = C.sec
 verL.ZIndex             = 13
 verL.Parent             = verF
 
--- ─── FPS / Ping inside header (right side) ──────────────
+-- ─── FPS / Ping  —  sits BETWEEN title and ver badge ────────
+-- Positioned at a fixed offset from left so it stays far from
+-- the minimize / close buttons which sit at the right edge.
+local statusPill = Instance.new("Frame")
+statusPill.Size             = UDim2.fromOffset(88, 20)
+statusPill.Position         = UDim2.new(0, 215, 0.5, -10)
+statusPill.BackgroundColor3 = C.trkBg
+statusPill.BackgroundTransparency = 0
+statusPill.BorderSizePixel  = 0
+statusPill.ZIndex           = 12
+statusPill.Parent           = header
+Instance.new("UICorner", statusPill).CornerRadius = UDim.new(1, 0)
+
 local fpsL = Instance.new("TextLabel")
-fpsL.Size               = UDim2.fromOffset(72, HDR)
-fpsL.Position           = UDim2.new(1, -120, 0, 0)
+fpsL.Size               = UDim2.fromOffset(42, 20)
+fpsL.Position           = UDim2.fromOffset(2, 0)
 fpsL.BackgroundTransparency = 1
-fpsL.Text               = "FPS  60"
+fpsL.Text               = "FPS 60"
 fpsL.Font               = Enum.Font.GothamBold
-fpsL.TextSize           = 9
-fpsL.TextColor3         = C.sec
-fpsL.TextXAlignment     = Enum.TextXAlignment.Right
-fpsL.ZIndex             = 12
-fpsL.Parent             = header
+fpsL.TextSize           = 8
+fpsL.TextColor3         = C.pri
+fpsL.TextXAlignment     = Enum.TextXAlignment.Center
+fpsL.ZIndex             = 13
+fpsL.Parent             = statusPill
+
+local spDiv = Instance.new("Frame")
+spDiv.Size             = UDim2.fromOffset(1, 12)
+spDiv.Position         = UDim2.fromOffset(44, 4)
+spDiv.BackgroundColor3 = C.border
+spDiv.BorderSizePixel  = 0
+spDiv.ZIndex           = 13
+spDiv.Parent           = statusPill
 
 local pingL = Instance.new("TextLabel")
-pingL.Size               = UDim2.fromOffset(72, HDR)
-pingL.Position           = UDim2.new(1, -120, 0, 0)   -- same x, stacked via secondary text
+pingL.Size               = UDim2.fromOffset(42, 20)
+pingL.Position           = UDim2.fromOffset(46, 0)
 pingL.BackgroundTransparency = 1
-pingL.Text               = "0ms"
-pingL.Font               = Enum.Font.Gotham
+pingL.Text               = "0 ms"
+pingL.Font               = Enum.Font.GothamBold
 pingL.TextSize           = 8
-pingL.TextColor3         = C.dim
-pingL.TextXAlignment     = Enum.TextXAlignment.Right
-pingL.ZIndex             = 12
-pingL.Parent             = header
-
--- Two-line FPS/Ping stack
-fpsL.Size     = UDim2.fromOffset(72, 18)
-fpsL.Position = UDim2.new(1, -120, 0, 4)
-pingL.Size    = UDim2.fromOffset(72, 14)
-pingL.Position = UDim2.new(1, -120, 0, 21)
+pingL.TextColor3         = C.sec
+pingL.TextXAlignment     = Enum.TextXAlignment.Center
+pingL.ZIndex             = 13
+pingL.Parent             = statusPill
 
 -- Realtime update
 local _ft = 0; local _fn = 0
@@ -1191,9 +1175,143 @@ local kp = tabPanels["Kill"]
 local _o = 0; local function o() _o=_o+1; return _o end
 
 mkSec(kp,"Target",o())
-mkDrop(kp,{title="Select Target",opts=pNames(),def="None",ord=o(),cb=function(v)
-    S.target = v=="None" and nil or Players:FindFirstChild(v)
-end})
+
+-- ── Player picker: scrollable button list + Refresh ──────────────
+-- Instead of a dropdown (which breaks when many players are listed),
+-- we build a small scrollable frame of ImageButtons, one per player.
+-- Refresh button re-scans and rebuilds the list in real time.
+
+local pickerCard = Instance.new("Frame")
+pickerCard.Name               = "TargetPicker"
+pickerCard.Size               = UDim2.new(1,0,0,90)
+pickerCard.BackgroundColor3   = C.card
+pickerCard.BackgroundTransparency = 0
+pickerCard.BorderSizePixel    = 0
+pickerCard.LayoutOrder        = o()
+pickerCard.ZIndex             = 14
+pickerCard.Parent             = kp
+Instance.new("UICorner",pickerCard).CornerRadius = UDim.new(0,5)
+
+-- Currently selected label
+local selLbl = Instance.new("TextLabel")
+selLbl.Size               = UDim2.new(1,-10,0,18)
+selLbl.Position           = UDim2.fromOffset(8,4)
+selLbl.BackgroundTransparency = 1
+selLbl.Text               = "Target  :  None"
+selLbl.Font               = Enum.Font.GothamBold
+selLbl.TextSize            = 9
+selLbl.TextColor3          = C.sec
+selLbl.TextXAlignment      = Enum.TextXAlignment.Left
+selLbl.ZIndex              = 15
+selLbl.Parent              = pickerCard
+
+-- Scrollable player list
+local pScroll = Instance.new("ScrollingFrame")
+pScroll.Size                 = UDim2.new(1,-4,0,46)
+pScroll.Position             = UDim2.fromOffset(2,22)
+pScroll.BackgroundColor3     = C.trkBg
+pScroll.BackgroundTransparency = 0
+pScroll.BorderSizePixel      = 0
+pScroll.ScrollBarThickness   = 2
+pScroll.ScrollBarImageColor3 = C.borderH
+pScroll.ScrollingDirection   = Enum.ScrollingDirection.Y
+pScroll.CanvasSize           = UDim2.fromOffset(0,0)
+pScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+pScroll.ZIndex               = 15
+pScroll.Parent               = pickerCard
+Instance.new("UICorner",pScroll).CornerRadius = UDim.new(0,4)
+
+local pList = Instance.new("UIListLayout")
+pList.SortOrder = Enum.SortOrder.LayoutOrder; pList.Padding = UDim.new(0,1); pList.Parent = pScroll
+local pPad = Instance.new("UIPadding")
+pPad.PaddingLeft=UDim.new(0,3); pPad.PaddingRight=UDim.new(0,3)
+pPad.PaddingTop=UDim.new(0,2); pPad.PaddingBottom=UDim.new(0,2); pPad.Parent=pScroll
+
+local selectedName = "None"
+
+local function buildPlayerList()
+    -- Clear old buttons
+    for _, c in ipairs(pScroll:GetChildren()) do
+        if c:IsA("ImageButton") then c:Destroy() end
+    end
+    local names = pNames()
+    if #names == 0 then names = {"None"} end
+    for i, nm in ipairs(names) do
+        local pb = Instance.new("ImageButton")
+        pb.Size               = UDim2.new(1,0,0,18)
+        pb.BackgroundColor3   = nm==selectedName and C.cardH or C.trkBg
+        pb.BackgroundTransparency = 0
+        pb.BorderSizePixel    = 0
+        pb.Image              = ""
+        pb.AutoButtonColor    = false
+        pb.LayoutOrder        = i
+        pb.ZIndex             = 16
+        pb.Parent             = pScroll
+        Instance.new("UICorner",pb).CornerRadius = UDim.new(0,3)
+        local pl = Instance.new("TextLabel")
+        pl.Size               = UDim2.fromScale(1,1)
+        pl.BackgroundTransparency = 1
+        pl.Text               = nm
+        pl.Font               = Enum.Font.GothamSemibold
+        pl.TextSize            = 9
+        pl.TextColor3          = nm==selectedName and C.white or C.pri
+        pl.TextXAlignment      = Enum.TextXAlignment.Left
+        pl.ZIndex              = 17
+        pl.Parent              = pb
+        local pp = Instance.new("UIPadding"); pp.PaddingLeft=UDim.new(0,5); pp.Parent=pl
+        pb.MouseButton1Click:Connect(function()
+            selectedName = nm
+            S.target = nm=="None" and nil or Players:FindFirstChild(nm)
+            selLbl.Text = "Target  :  " .. nm
+            selLbl.TextColor3 = nm=="None" and C.sec or C.pri
+            -- Re-color all buttons
+            for _, ch in ipairs(pScroll:GetChildren()) do
+                if ch:IsA("ImageButton") then
+                    local cl = ch:FindFirstChildOfClass("TextLabel")
+                    local isThis = cl and cl.Text == nm
+                    ch.BackgroundColor3 = isThis and C.cardH or C.trkBg
+                    if cl then cl.TextColor3 = isThis and C.white or C.pri end
+                end
+            end
+        end)
+    end
+end
+
+buildPlayerList()
+
+-- Refresh button
+local refreshBtn = Instance.new("ImageButton")
+refreshBtn.Size               = UDim2.new(1,-4,0,16)
+refreshBtn.Position           = UDim2.fromOffset(2,72)
+refreshBtn.BackgroundColor3   = C.card
+refreshBtn.BackgroundTransparency = 0
+refreshBtn.BorderSizePixel    = 0
+refreshBtn.Image              = ""
+refreshBtn.AutoButtonColor    = false
+refreshBtn.ZIndex             = 15
+refreshBtn.Parent             = pickerCard
+Instance.new("UICorner",refreshBtn).CornerRadius = UDim.new(0,4)
+local rlS = Instance.new("UIStroke",refreshBtn); rlS.Color=C.border; rlS.Thickness=1
+local rlbl = Instance.new("TextLabel")
+rlbl.Size               = UDim2.fromScale(1,1)
+rlbl.BackgroundTransparency = 1
+rlbl.Text               = "Refresh Player List"
+rlbl.Font               = Enum.Font.GothamSemibold
+rlbl.TextSize            = 8
+rlbl.TextColor3          = C.sec
+rlbl.ZIndex              = 16
+rlbl.Parent              = refreshBtn
+refreshBtn.MouseButton1Click:Connect(function()
+    buildPlayerList()
+    rlbl.TextColor3 = C.pri
+    task.delay(0.6, function() rlbl.TextColor3 = C.sec end)
+end)
+refreshBtn.MouseEnter:Connect(function()
+    TS:Create(refreshBtn,TweenInfo.new(0.10),{BackgroundColor3=C.cardH}):Play()
+end)
+refreshBtn.MouseLeave:Connect(function()
+    TS:Create(refreshBtn,TweenInfo.new(0.10),{BackgroundColor3=C.card}):Play()
+end)
 
 mkSec(kp,"Follow",o())
 mkDrop(kp,{title="Mode",opts={"HEAD","ORBIT","FEET"},def="HEAD",ord=o(),cb=function(v)
@@ -1202,13 +1320,7 @@ end})
 mkSlider(kp,{title="Stud Distance",min=1,max=20,def=3,suf=" st",step=0.5,ord=o(),cb=function(v) S.dist=v end})
 mkSlider(kp,{title="Follow Speed",min=5,max=100,def=20,suf="",step=1,ord=o(),cb=function(v) S.speed=v end})
 
-mkSec(kp,"Attack",o())
-mkToggle(kp,{title="Auto Tap",sub="Auto click attack buttons",val=false,ord=o(),cb=function(v)
-    S.tapOn=v
-    if v and not tapAlive then tapAlive=true; task.spawn(tapLoop) else tapAlive=false end
-end})
-mkSlider(kp,{title="Tap Delay",min=0.05,max=2,def=0.2,suf="s",step=0.05,ord=o(),cb=function(v) S.tapDelay=v end})
-mkDrop(kp,{title="Skill",opts={"Pukulan Biasa","Pukulan Berurutan","Dorong","Uppercut"},def="Pukulan Biasa",ord=o(),cb=function(v) S.tapSkill=v end})
+
 
 mkSec(kp,"Actions",o())
 mkToggle(kp,{title="Follow Target",sub="Stick to selected target",val=false,ord=o(),cb=function(v)
@@ -1275,17 +1387,17 @@ local ep = tabPanels["Exploit"]
 local _e = 0; local function e() _e=_e+1; return _e end
 
 mkSec(ep,"TSB Attributes",e())
-mkToggle(ep,{title="No Dash Cooldown",sub="workspace NoDashCooldown",val=false,ord=e(),cb=function(v)
+mkToggle(ep,{title="No Dash Cooldown",sub="Only works on backstepping dash",val=false,ord=e(),cb=function(v)
     S.noDash=v; pcall(function() workspace:SetAttribute("NoDashCooldown",v) end)
 end})
-mkToggle(ep,{title="No Fatigue",sub="workspace NoFatigue",val=false,ord=e(),cb=function(v)
+mkToggle(ep,{title="No Fatigue",sub="Never tire from dashing or attacking",val=false,ord=e(),cb=function(v)
     S.noFatigue=v; pcall(function() workspace:SetAttribute("NoFatigue",v) end)
 end})
 mkSec(ep,"Emotes",e())
-mkToggle(ep,{title="Extra Emote Slots",val=false,ord=e(),cb=function(v)
+mkToggle(ep,{title="Extra Emote Slots",sub="Unlock additional emote equip slots",val=false,ord=e(),cb=function(v)
     S.extraSlots=v; pcall(function() LP:SetAttribute("ExtraSlots",v) end)
 end})
-mkToggle(ep,{title="Emote Search Bar",val=false,ord=e(),cb=function(v)
+mkToggle(ep,{title="Emote Search Bar",sub="Add search box inside emote menu",val=false,ord=e(),cb=function(v)
     S.emoteSearch=v; pcall(function() LP:SetAttribute("EmoteSearchBar",v) end)
 end})
 mkSec(ep,"Server",e())
@@ -1457,7 +1569,7 @@ task.spawn(function()
     pcall(function()
         SG:SetCore("SendNotification",{
             Title="Anonymous9x TSB Strong",
-            Text="v6.0 Ready — All systems online",
+            Text="v1.03 — All systems online",
             Duration=4,
         })
     end)
