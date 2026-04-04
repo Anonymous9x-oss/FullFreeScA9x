@@ -250,125 +250,11 @@ local STH = 20   -- status strip height
 
 -- ═════════════════════════════════════════
 -- LOADING SCREEN  (full black overlay)
--- Covers entire screen, fades out before
--- main window appears.
+-- Covers only the panel UI (parented to win AFTER win is created).
+-- Triggered via task.spawn after a 1-frame yield so AbsoluteSize is valid.
+-- Total duration ~3.2 seconds then fades out cleanly.
 -- ═════════════════════════════════════════
-local loadRoot = Instance.new("Frame")
-loadRoot.Name               = "LoadingScreen"
-loadRoot.Size               = UDim2.fromScale(1, 1)
-loadRoot.BackgroundColor3   = Color3.new(0, 0, 0)
-loadRoot.BackgroundTransparency = 0
-loadRoot.ZIndex             = 9000
-loadRoot.BorderSizePixel    = 0
-loadRoot.Parent             = root
-
--- "Are you Ready?" heading
-local ldTitle = Instance.new("TextLabel")
-ldTitle.Size               = UDim2.new(1, 0, 0, 28)
-ldTitle.Position           = UDim2.new(0, 0, 0.38, 0)
-ldTitle.BackgroundTransparency = 1
-ldTitle.Text               = "Are you Ready?"
-ldTitle.Font               = Enum.Font.GothamBlack
-ldTitle.TextSize            = 22
-ldTitle.TextColor3          = Color3.new(1, 1, 1)
-ldTitle.TextXAlignment      = Enum.TextXAlignment.Center
-ldTitle.ZIndex              = 9001
-ldTitle.Parent              = loadRoot
-
--- Subtitle
-local ldSub = Instance.new("TextLabel")
-ldSub.Size               = UDim2.new(1, 0, 0, 16)
-ldSub.Position           = UDim2.new(0, 0, 0.46, 0)
-ldSub.BackgroundTransparency = 1
-ldSub.Text               = "Anonymous9x TSB Strong"
-ldSub.Font               = Enum.Font.GothamBold
-ldSub.TextSize            = 11
-ldSub.TextColor3          = Color3.fromRGB(130, 130, 130)
-ldSub.TextXAlignment      = Enum.TextXAlignment.Center
-ldSub.ZIndex              = 9001
-ldSub.Parent              = loadRoot
-
--- Progress track
-local ldTrackF = Instance.new("Frame")
-ldTrackF.Size             = UDim2.fromOffset(220, 3)
-ldTrackF.Position         = UDim2.new(0.5, -110, 0.56, 0)
-ldTrackF.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-ldTrackF.BackgroundTransparency = 0
-ldTrackF.BorderSizePixel  = 0
-ldTrackF.ZIndex           = 9001
-ldTrackF.Parent           = loadRoot
-Instance.new("UICorner", ldTrackF).CornerRadius = UDim.new(1, 0)
-
-local ldFill = Instance.new("Frame")
-ldFill.Size             = UDim2.fromOffset(0, 3)
-ldFill.BackgroundColor3 = Color3.new(1, 1, 1)
-ldFill.BackgroundTransparency = 0
-ldFill.BorderSizePixel  = 0
-ldFill.ZIndex           = 9002
-ldFill.Parent           = ldTrackF
-Instance.new("UICorner", ldFill).CornerRadius = UDim.new(1, 0)
-
--- Status text below bar
-local ldStatus = Instance.new("TextLabel")
-ldStatus.Size               = UDim2.new(1, 0, 0, 14)
-ldStatus.Position           = UDim2.new(0, 0, 0.60, 0)
-ldStatus.BackgroundTransparency = 1
-ldStatus.Text               = "Loading..."
-ldStatus.Font               = Enum.Font.Gotham
-ldStatus.TextSize            = 9
-ldStatus.TextColor3          = Color3.fromRGB(80, 80, 80)
-ldStatus.TextXAlignment      = Enum.TextXAlignment.Center
-ldStatus.ZIndex              = 9001
-ldStatus.Parent              = loadRoot
-
--- Version label bottom
-local ldVer = Instance.new("TextLabel")
-ldVer.Size               = UDim2.new(1, 0, 0, 12)
-ldVer.Position           = UDim2.new(0, 0, 1, -20)
-ldVer.BackgroundTransparency = 1
-ldVer.Text               = "v1.03  |  By Anonymous9x"
-ldVer.Font               = Enum.Font.Gotham
-ldVer.TextSize            = 8
-ldVer.TextColor3          = Color3.fromRGB(45, 45, 45)
-ldVer.TextXAlignment      = Enum.TextXAlignment.Center
-ldVer.ZIndex              = 9001
-ldVer.Parent              = loadRoot
-
--- Hide main window during loading
-win.Visible = false
-
--- Animate loading
-task.spawn(function()
-    local steps = {
-        {pct=0.15, msg="Initializing engine..."},
-        {pct=0.32, msg="Connecting services..."},
-        {pct=0.54, msg="Loading features..."},
-        {pct=0.72, msg="Building interface..."},
-        {pct=0.88, msg="Fetching profile..."},
-        {pct=1.00, msg="Almost there..."},
-    }
-    local TW = ldTrackF.AbsoluteSize.X > 0 and ldTrackF.AbsoluteSize.X or 220
-    for _, step in ipairs(steps) do
-        ldStatus.Text = step.msg
-        TS:Create(ldFill, TweenInfo.new(0.38, Enum.EasingStyle.Quad),
-            {Size = UDim2.fromOffset(math.floor(TW * step.pct), 3)}):Play()
-        task.wait(0.44)
-    end
-    -- Final pause then fade out
-    task.wait(0.30)
-    TS:Create(loadRoot, TweenInfo.new(0.40, Enum.EasingStyle.Quad),
-        {BackgroundTransparency = 1}):Play()
-    TS:Create(ldTitle,  TweenInfo.new(0.35), {TextTransparency  = 1}):Play()
-    TS:Create(ldSub,    TweenInfo.new(0.35), {TextTransparency  = 1}):Play()
-    TS:Create(ldStatus, TweenInfo.new(0.35), {TextTransparency  = 1}):Play()
-    TS:Create(ldVer,    TweenInfo.new(0.35), {TextTransparency  = 1}):Play()
-    TS:Create(ldTrackF, TweenInfo.new(0.30), {BackgroundTransparency = 1}):Play()
-    TS:Create(ldFill,   TweenInfo.new(0.30), {BackgroundTransparency = 1}):Play()
-    task.wait(0.45)
-    -- Show main window and destroy loader
-    win.Visible = true
-    pcall(function() loadRoot:Destroy() end)
-end)
+-- (loading frame built after win — see bottom of WINDOW section)
 
 -- ═════════════════════════════════════════
 -- WINDOW
@@ -1965,6 +1851,131 @@ mkBtn(plp,{title="Clear All ESP",sub="Remove all ESP labels from players",ord=pl
 end})
 
 setTab("Kill")
+
+-- ═════════════════════════════════════════
+-- LOADING SCREEN  (covers panel UI only)
+-- Parented to win so it overlays only the
+-- panel. Bar uses fixed 200px width so it
+-- never reads AbsoluteSize = 0.
+-- Total duration ≈ 3.2 s then destroys.
+-- ═════════════════════════════════════════
+task.spawn(function()
+    -- 1 frame yield so win has rendered and AbsoluteSize is valid
+    RS.Heartbeat:Wait()
+
+    local loadRoot = Instance.new("Frame")
+    loadRoot.Name               = "LoadingScreen"
+    loadRoot.Size               = UDim2.fromScale(1, 1)
+    loadRoot.BackgroundColor3   = Color3.new(0, 0, 0)
+    loadRoot.BackgroundTransparency = 0
+    loadRoot.BorderSizePixel    = 0
+    loadRoot.ClipsDescendants   = true
+    loadRoot.ZIndex             = 9000
+    loadRoot.Parent             = win   -- ← covers panel only, not full screen
+    Instance.new("UICorner", loadRoot).CornerRadius = UDim.new(0, 7)
+
+    -- Title
+    local ldTitle = Instance.new("TextLabel")
+    ldTitle.Size               = UDim2.new(1, 0, 0, 30)
+    ldTitle.Position           = UDim2.new(0, 0, 0.36, 0)
+    ldTitle.BackgroundTransparency = 1
+    ldTitle.Text               = "Are you Ready?"
+    ldTitle.Font               = Enum.Font.GothamBlack
+    ldTitle.TextSize            = 20
+    ldTitle.TextColor3          = Color3.new(1, 1, 1)
+    ldTitle.TextXAlignment      = Enum.TextXAlignment.Center
+    ldTitle.ZIndex              = 9001
+    ldTitle.Parent              = loadRoot
+
+    -- Sub
+    local ldSub = Instance.new("TextLabel")
+    ldSub.Size               = UDim2.new(1, 0, 0, 14)
+    ldSub.Position           = UDim2.new(0, 0, 0.45, 0)
+    ldSub.BackgroundTransparency = 1
+    ldSub.Text               = "Anonymous9x TSB Strong"
+    ldSub.Font               = Enum.Font.GothamBold
+    ldSub.TextSize            = 10
+    ldSub.TextColor3          = Color3.fromRGB(120, 120, 120)
+    ldSub.TextXAlignment      = Enum.TextXAlignment.Center
+    ldSub.ZIndex              = 9001
+    ldSub.Parent              = loadRoot
+
+    -- Track (fixed 200px — never zero, no AbsoluteSize needed)
+    local BAR_W = 200
+    local ldTrack = Instance.new("Frame")
+    ldTrack.Size             = UDim2.fromOffset(BAR_W, 3)
+    ldTrack.Position         = UDim2.new(0.5, -(BAR_W/2), 0.55, 0)
+    ldTrack.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    ldTrack.BackgroundTransparency = 0
+    ldTrack.BorderSizePixel  = 0
+    ldTrack.ZIndex           = 9001
+    ldTrack.Parent           = loadRoot
+    Instance.new("UICorner", ldTrack).CornerRadius = UDim.new(1, 0)
+
+    local ldFill = Instance.new("Frame")
+    ldFill.Size             = UDim2.fromOffset(0, 3)
+    ldFill.BackgroundColor3 = Color3.new(1, 1, 1)
+    ldFill.BackgroundTransparency = 0
+    ldFill.BorderSizePixel  = 0
+    ldFill.ZIndex           = 9002
+    ldFill.Parent           = ldTrack
+    Instance.new("UICorner", ldFill).CornerRadius = UDim.new(1, 0)
+
+    -- Status
+    local ldStatus = Instance.new("TextLabel")
+    ldStatus.Size               = UDim2.new(1, 0, 0, 13)
+    ldStatus.Position           = UDim2.new(0, 0, 0.60, 0)
+    ldStatus.BackgroundTransparency = 1
+    ldStatus.Text               = "Loading..."
+    ldStatus.Font               = Enum.Font.Gotham
+    ldStatus.TextSize            = 8
+    ldStatus.TextColor3          = Color3.fromRGB(75, 75, 75)
+    ldStatus.TextXAlignment      = Enum.TextXAlignment.Center
+    ldStatus.ZIndex              = 9001
+    ldStatus.Parent              = loadRoot
+
+    -- Version
+    local ldVer = Instance.new("TextLabel")
+    ldVer.Size               = UDim2.new(1, 0, 0, 11)
+    ldVer.Position           = UDim2.new(0, 0, 1, -16)
+    ldVer.BackgroundTransparency = 1
+    ldVer.Text               = "v1.03  |  By Anonymous9x"
+    ldVer.Font               = Enum.Font.Gotham
+    ldVer.TextSize            = 7
+    ldVer.TextColor3          = Color3.fromRGB(40, 40, 40)
+    ldVer.TextXAlignment      = Enum.TextXAlignment.Center
+    ldVer.ZIndex              = 9001
+    ldVer.Parent              = loadRoot
+
+    -- ── Animate — 4 steps, ~0.6s each = ~3.0s total ─────────
+    local steps = {
+        {pct=0.25, msg="Initializing engine..."},
+        {pct=0.55, msg="Building interface..."},
+        {pct=0.82, msg="Loading features..."},
+        {pct=1.00, msg="Almost ready..."},
+    }
+
+    for _, step in ipairs(steps) do
+        ldStatus.Text = step.msg
+        -- Use Scale so it always fills correctly regardless of window size
+        TS:Create(ldFill, TweenInfo.new(0.45, Enum.EasingStyle.Quad),
+            {Size = UDim2.fromOffset(math.floor(BAR_W * step.pct), 3)}):Play()
+        task.wait(0.60)
+    end
+
+    -- ── Fade out all elements ─────────────────────────────────
+    task.wait(0.20)
+    local FI = TweenInfo.new(0.35, Enum.EasingStyle.Quad)
+    TS:Create(loadRoot,  FI, {BackgroundTransparency = 1}):Play()
+    TS:Create(ldTitle,   FI, {TextTransparency = 1}):Play()
+    TS:Create(ldSub,     FI, {TextTransparency = 1}):Play()
+    TS:Create(ldStatus,  FI, {TextTransparency = 1}):Play()
+    TS:Create(ldVer,     FI, {TextTransparency = 1}):Play()
+    TS:Create(ldTrack,   FI, {BackgroundTransparency = 1}):Play()
+    TS:Create(ldFill,    FI, {BackgroundTransparency = 1}):Play()
+    task.wait(0.40)
+    pcall(function() loadRoot:Destroy() end)
+end)
 
 task.spawn(function()
     task.wait(1.5)
